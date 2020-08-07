@@ -1,0 +1,25 @@
+name: ci
+on: [pull_request]
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node: [10, 12]
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node }}
+    - name: install rpm in macos
+      if: matrix.os == 'macos-latest'
+      run: brew install rpm
+    - uses: actions/cache@v2
+      with:
+        path: ~/.npm
+        key: ${{ matrix.os }}-${{ matrix.node }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ matrix.os }}-${{ matrix.node }}-node-
+    - run: npm install
+    - run: npm test
